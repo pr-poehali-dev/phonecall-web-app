@@ -33,6 +33,8 @@ export default function Index() {
   const [myMicOn, setMyMicOn] = useState(false);
   const [myCameraOn, setMyCameraOn] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ author: string; text: string; avatar: string }>>([]);
+  const [messageText, setMessageText] = useState('');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -132,24 +134,44 @@ export default function Index() {
     });
   };
 
-  const toggleMic = () => {
+  const toggleMic = async () => {
     if (!myMicOn) {
-      toast({
-        title: 'Предоставьте разрешение',
-        description: 'Разрешите доступ к микрофону в левом верхнем углу браузера',
-      });
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMyMicOn(true);
+        toast({
+          title: 'Микрофон включен',
+        });
+      } catch (error) {
+        toast({
+          title: 'Доступ запрещен',
+          description: 'Разрешите доступ к микрофону в настройках браузера',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      setMyMicOn(false);
     }
-    setMyMicOn(!myMicOn);
   };
 
-  const toggleCamera = () => {
+  const toggleCamera = async () => {
     if (!myCameraOn) {
-      toast({
-        title: 'Предоставьте разрешение',
-        description: 'Разрешите доступ к камере в левом верхнем углу браузера',
-      });
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        setMyCameraOn(true);
+        toast({
+          title: 'Камера включена',
+        });
+      } catch (error) {
+        toast({
+          title: 'Доступ запрещен',
+          description: 'Разрешите доступ к камере в настройках браузера',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      setMyCameraOn(false);
     }
-    setMyCameraOn(!myCameraOn);
   };
 
   const handleUpdateProfile = (e: React.FormEvent) => {
@@ -168,6 +190,23 @@ export default function Index() {
       avatar: user!.avatar,
     });
     setIsEditProfile(true);
+  };
+
+  const sendMessage = () => {
+    if (!messageText.trim()) return;
+    
+    setChatMessages([...chatMessages, {
+      author: user!.name,
+      text: messageText,
+      avatar: user!.avatar,
+    }]);
+    setMessageText('');
+  };
+
+  const handleMessageKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
   };
 
   if (currentPage === 'auth') {
@@ -522,10 +561,40 @@ export default function Index() {
                   <Icon name="X" size={20} />
                 </Button>
               </div>
-              <div className="h-64 overflow-auto mb-4 p-4 bg-muted/30 rounded-lg">
-                <p className="text-center text-muted-foreground text-sm">Здесь будут сообщения чата</p>
+              <div className="h-64 overflow-auto mb-4 p-4 bg-muted/30 rounded-lg space-y-3">
+                {chatMessages.length === 0 ? (
+                  <p className="text-center text-muted-foreground text-sm">Здесь будут сообщения чата</p>
+                ) : (
+                  chatMessages.map((msg, idx) => (
+                    <div key={idx} className="flex gap-2 animate-fade-in">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        <AvatarImage src={msg.avatar} />
+                        <AvatarFallback>{msg.author[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold mb-1">{msg.author}</p>
+                        <p className="text-sm bg-white p-2 rounded-lg shadow-sm">{msg.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-              <Input placeholder="Написать сообщение..." className="h-12" />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Написать сообщение..."
+                  className="h-12 flex-1"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyPress={handleMessageKeyPress}
+                />
+                <Button
+                  onClick={sendMessage}
+                  size="lg"
+                  className="h-12 w-12 p-0 rounded-full bg-gradient-to-r from-primary to-secondary"
+                >
+                  <Icon name="Send" size={20} />
+                </Button>
+              </div>
             </div>
           )}
         </div>
