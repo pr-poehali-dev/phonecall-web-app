@@ -93,7 +93,9 @@ export default function GroupPage({
                       <p className="text-sm opacity-75">Камера включена</p>
                     </div>
                   ) : (
-                    <Avatar className="w-32 h-32 border-4 border-white/30">
+                    <Avatar className={`w-32 h-32 border-4 ${
+                      member.isMicOn ? 'speaking-animation' : 'border-white/30'
+                    }`}>
                       <AvatarImage src={member.avatar} />
                       <AvatarFallback className="text-3xl">{member.name[0]}</AvatarFallback>
                     </Avatar>
@@ -101,7 +103,9 @@ export default function GroupPage({
                 </div>
 
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                  <Avatar className="w-8 h-8 border-2 border-white">
+                  <Avatar className={`w-8 h-8 border-2 ${
+                    member.isMicOn ? 'speaking-animation' : 'border-white'
+                  }`}>
                     <AvatarImage src={member.avatar} />
                     <AvatarFallback>{member.name[0]}</AvatarFallback>
                   </Avatar>

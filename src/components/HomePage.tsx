@@ -28,8 +28,8 @@ export default function HomePage({
       <div className="max-w-7xl mx-auto p-6">
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center animate-glow">
-              <Icon name="Phone" size={32} className="text-white" />
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center animate-glow">
+              <img src="https://cdn.poehali.dev/files/оплоуыдлпоуоупкпкуды.PNG" alt="PhoneCall" className="w-12 h-12" />
             </div>
             <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               PhoneCall
