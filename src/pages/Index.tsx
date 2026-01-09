@@ -30,6 +30,7 @@ export default function Index() {
   const [groupCode, setGroupCode] = useState('');
   const [currentGroup, setCurrentGroup] = useState<string | null>(null);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [activeGroups, setActiveGroups] = useState<Map<string, GroupMember[]>>(new Map());
   const [myMicOn, setMyMicOn] = useState(false);
   const [myCameraOn, setMyCameraOn] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -63,16 +64,20 @@ export default function Index() {
 
   const handleCreateGroup = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newMember: GroupMember = {
+      name: user!.name,
+      phone: user!.phone,
+      avatar: user!.avatar,
+      isMicOn: false,
+      isCameraOn: false,
+    };
+    
+    const newGroups = new Map(activeGroups);
+    newGroups.set(code, [newMember]);
+    setActiveGroups(newGroups);
+    
     setCurrentGroup(code);
-    setGroupMembers([
-      {
-        name: user!.name,
-        phone: user!.phone,
-        avatar: user!.avatar,
-        isMicOn: false,
-        isCameraOn: false,
-      },
-    ]);
+    setGroupMembers([newMember]);
     setCurrentPage('group');
     toast({
       title: 'Группа создана!',
@@ -89,23 +94,41 @@ export default function Index() {
       });
       return;
     }
+    
+    const existingGroup = activeGroups.get(groupCode);
+    if (!existingGroup) {
+      toast({
+        title: 'Такой комнаты не существует',
+        description: 'Проверьте код и попробуйте снова',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (existingGroup.length >= 4) {
+      toast({
+        title: 'Группа заполнена',
+        description: 'В группе может быть максимум 4 человека',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const newMember: GroupMember = {
+      name: user!.name,
+      phone: user!.phone,
+      avatar: user!.avatar,
+      isMicOn: false,
+      isCameraOn: false,
+    };
+    
+    const updatedMembers = [...existingGroup, newMember];
+    const newGroups = new Map(activeGroups);
+    newGroups.set(groupCode, updatedMembers);
+    setActiveGroups(newGroups);
+    
     setCurrentGroup(groupCode);
-    setGroupMembers([
-      {
-        name: user!.name,
-        phone: user!.phone,
-        avatar: user!.avatar,
-        isMicOn: false,
-        isCameraOn: false,
-      },
-      {
-        name: 'Анна Смирнова',
-        phone: '+7 999 111 22 33',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anna',
-        isMicOn: true,
-        isCameraOn: true,
-      },
-    ]);
+    setGroupMembers(updatedMembers);
     setShowJoinDialog(false);
     setCurrentPage('group');
     toast({
@@ -126,12 +149,20 @@ export default function Index() {
     });
   };
 
-  const copyGroupCode = () => {
-    navigator.clipboard.writeText(currentGroup!);
-    toast({
-      title: 'Код скопирован!',
-      description: currentGroup,
-    });
+  const copyGroupCode = async () => {
+    try {
+      await navigator.clipboard.writeText(currentGroup!);
+      toast({
+        title: 'Код скопирован!',
+        description: currentGroup!,
+      });
+    } catch (error) {
+      toast({
+        title: 'Не удалось скопировать',
+        description: 'Скопируйте код вручную: ' + currentGroup,
+        variant: 'destructive',
+      });
+    }
   };
 
   const toggleMic = async () => {
